@@ -4,6 +4,7 @@ from datetime import datetime
 
 interface = conf.iface                  # Default interface to sniff on
 gw_ip = conf.route.route("0.0.0.0")[2]  # Default gateway IP address
+my_mac = get_if_hwaddr(interface)       # My own MAC address
 DELAY = 1                               # Sniffing loop delay in seconds
 
 arp_table = {}                          # Dictionary to store IP -> MAC observed mappings
@@ -60,8 +61,7 @@ def handle_arp(pkt):
 
     # --- Indicator 2: Unknown IP Claims ---
     if src_ip not in arp_table:
-        if src_ip != gw_ip:
-            # Only challenge NON-gateway devices
+        if src_ip != gw_ip and src_mac != my_mac: # Only challenge NON-gateway devices
             real_mac = verify_mac_by_challenge(src_ip)
 
             if real_mac is None:
